@@ -1,0 +1,8 @@
+bin/
+.settings/
+work/
+classes/
+tmp/
+*.class
+*.classpath
+*.project
