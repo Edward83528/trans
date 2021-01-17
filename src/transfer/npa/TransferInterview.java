@@ -18,6 +18,7 @@ import java.util.Properties;
 import org.apache.commons.io.FilenameUtils;
 
 import transfer.component.DownloadImage;
+import transfer.component.Extraction;
 import transfer.component.Snowflake;
 import transfer.entity.Interview;
 import transfer.entity.Link;
@@ -50,6 +51,8 @@ public class TransferInterview extends Thread {
 	private String dsid = "interview";
 	// 轉檔後檔案輸出路徑
 	private String filePath = "D:\\transferFile\\" + dsid;
+	// 轉檔後檔案輸出路徑(ck)
+	private String filePath_ck = "D:\\transferCkFile\\" + dsid;
 	// 語言
 	private String LanguageType = null;
 	// 類別序號
@@ -71,7 +74,7 @@ public class TransferInterview extends Thread {
 			System.out.println("讀進資料共:" + in.size() + "筆");
 		}
 		// 讀出並寫入
-		System.out.println("轉檔是否成功:" + transfer.transform_out(in));
+		// System.out.println("轉檔是否成功:" + transfer.transform_out(in));
 
 	}
 
@@ -208,6 +211,10 @@ public class TransferInterview extends Thread {
 					list.setOD_HOST(rs.getString("interview_host")); // 主持人/製播小組
 					list.setOD_DETAILCONTENT("<div class=\"ed_model01 clearfix\"><div class=\"ed_txt\">"
 							+ rs.getString("interview_content") + "</div></div>");
+
+					// 下載內容的圖片
+					Extraction.getImgMatchString(rs.getString("interview_content"), true, filePath_ck);
+
 					list.setOD_POSTERDATE(parse(rs.getString("setup_time").substring(0, 10) + " 00:00:00"));
 					list.setOD_CLOSEDATE("0".equals(rs.getString("enable")) ? parse("2020-09-03 00:00:00") : null);
 					list.setOD_STARTUSING("0".equals(rs.getString("enable")) ? false : true);

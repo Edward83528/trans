@@ -18,6 +18,7 @@ import java.util.Properties;
 import org.apache.commons.io.FilenameUtils;
 
 import transfer.component.DownloadImage;
+import transfer.component.Extraction;
 import transfer.component.Snowflake;
 import transfer.entity.ProgramList;
 import transfer.entity.Link;
@@ -50,6 +51,8 @@ public class TransferProgramList extends Thread {
 	private String dsid = "programlist";
 	// 轉檔後檔案輸出路徑
 	private String filePath = "D:\\transferFile\\" + dsid;
+	// 轉檔後檔案輸出路徑(ck)
+	private String filePath_ck = "D:\\transferCkFile\\" + dsid;
 	// 語言
 	private String LanguageType = null;
 	// 類別序號
@@ -72,7 +75,7 @@ public class TransferProgramList extends Thread {
 			System.out.println("讀進資料共:" + in.size() + "筆");
 		}
 		// 讀出並寫入
-		System.out.println("轉檔是否成功:" + transfer.transform_out(in));
+		// System.out.println("轉檔是否成功:" + transfer.transform_out(in));
 
 	}
 
@@ -268,6 +271,10 @@ public class TransferProgramList extends Thread {
 					if (detailContent != null && !detailContent.isEmpty()) {
 						list.setOD_DETAILCONTENT("<div class=\"ed_model01 clearfix\"><div class=\"ed_txt\">"
 								+ detailContent + "</div></div>"); // 主持人介紹(心情小語)
+
+						// 下載內容的圖片
+						Extraction.getImgMatchString(detailContent, true, filePath_ck);
+
 					} else {
 						list.setOD_DETAILCONTENT("");
 					}
