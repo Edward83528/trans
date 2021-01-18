@@ -179,7 +179,7 @@ public class TransferMessage187 extends Thread {
 
 					String serno = "4A2M" + String.valueOf(rs.getInt("ID"));
 					list.setOD_SERNO(serno.replaceAll(" ", "").trim());
-					list.setOD_PUBUNITDN("ou=A2M00,ou=organization,o=npa,c=tw");
+					list.setOD_PUBUNITDN(MappingDept.mappingNPAPubUnitDN(String.valueOf(rs.getInt("group_ID"))));
 					list.setOD_SUBJECT(rs.getString("title"));
 					list.setOD_DETAILCONTENT("<div class=\"ed_model01 clearfix\"><div class=\"ed_txt\">"
 							+ rs.getString("content") + "</div></div>");
@@ -462,14 +462,16 @@ public class TransferMessage187 extends Thread {
 
 						if (item.getUrl() != null && !item.getUrl().isEmpty() && item.getUrl().indexOf("mp3") == -1) {
 
-							String sSql5 = String.format(
-									"INSERT INTO %s (OD_SERNO, OD_DETAILNO, OD_FLAG, OD_CLIENTFILE, "
-											+ "OD_SERVERFILE, OD_EXPFILE, OD_IMAGEMAGICK, OD_SERVERFILEPDF, OD_PDFFLAG, OD_SERVERFILEODF, "
-											+ "OD_ODFFLAG, OD_VIDEOURL, OD_VIDEOSOURCE, OD_FILESIZE, OD_READNUMBER, OD_DATASORT, OD_CREATEUID, "
+							String sSql5 = String
+									.format("INSERT INTO %s (OD_SERNO, OD_DETAILNO, OD_FLAG, OD_CLIENTFILE, "
+											+ "OD_SERVERFILE, OD_EXPFILE, OD_IMAGEMAGICK, OD_SERVERFILEPDF, OD_PDFFLAG,"
+											+ "OD_SERVERFILEODF, "
+											+ "OD_ODFFLAG, OD_VIDEOURL, OD_VIDEOSOURCE, OD_FILESIZE, OD_READNUMBER,"
+											+ "OD_DATASORT, OD_CREATEUID, "
 											+ "OD_CREATENAME, OD_CREATEDATE, OD_POSTUID, OD_POSTNAME, OD_UPDATEDATE, "
 											+ "OD_DSID) "
-											+ "VALUES (?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?,?, ?)",
-									filetablename);
+											+ "VALUES (?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?,?,"
+											+ "?)", filetablename);
 
 							stmts5 = conn.prepareStatement(sSql5);
 							stmts5.clearParameters();

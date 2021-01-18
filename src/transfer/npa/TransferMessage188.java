@@ -179,7 +179,7 @@ public class TransferMessage188 extends Thread {
 
 					String serno = "5A2M" + String.valueOf(rs.getInt("ID"));
 					list.setOD_SERNO(serno.replaceAll(" ", "").trim());
-					list.setOD_PUBUNITDN("ou=A2M00,ou=organization,o=npa,c=tw");
+					list.setOD_PUBUNITDN(MappingDept.mappingNPAPubUnitDN(String.valueOf(rs.getInt("group_ID"))));
 					list.setOD_SUBJECT(rs.getString("title"));
 					list.setOD_DETAILCONTENT("<div class=\"ed_model01 clearfix\"><div class=\"ed_txt\">"
 							+ rs.getString("content") + "</div></div>");
