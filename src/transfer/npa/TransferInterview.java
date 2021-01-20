@@ -75,7 +75,8 @@ public class TransferInterview extends Thread {
 		}
 		// 讀出並寫入
 		// System.out.println("轉檔是否成功:" + transfer.transform_out(in));
-
+		// 更新
+		// System.out.println("更新是否成功:" + transfer.update(in));
 	}
 
 	public String getErrorMsg() {
@@ -179,10 +180,14 @@ public class TransferInterview extends Thread {
 					Interview list = new Interview();
 					String serno = "2A2M" + String.valueOf(rs.getInt("ID"));
 					list.setOD_SERNO(serno.replaceAll(" ", "").trim());
-					list.setOD_PUBUNITDN("ou=A2M00,ou=organization,o=npa,c=tw");
 					list.setOD_SUBJECT(rs.getString("interview_title"));
 					String interview_type = rs.getString("interview_type");
 					String stationSerno = "5566";
+
+					String unitdn = "ou=A2M00,ou=organization,o=npa,c=tw";
+					unitdn = MappingDept.mappingNPAPubUnitDN2(interview_type);
+					list.setOD_PUBUNITDN(unitdn);
+
 					if ("9".equals(interview_type)) {
 						stationSerno = "7493b402-f78d-4303-947e-18fd43b9a30c";
 					} else if ("1".equals(interview_type)) {
@@ -202,6 +207,7 @@ public class TransferInterview extends Thread {
 					} else if ("8".equals(interview_type)) {
 						stationSerno = "fd1d014e-3af6-4bc2-b4ef-83fb5ecb1360";
 					}
+
 					list.setOD_STATIONSERNO(stationSerno); // 全國網/分臺代碼
 					list.setOD_INTERVIEWDATE(parse(rs.getString("interview_date").substring(0, 10) + " 00:00:00")); // 專訪日期
 					String interview_unit = rs.getString("interview_unit"); // 19
@@ -269,7 +275,7 @@ public class TransferInterview extends Thread {
 
 					list.setOD_POSTNAME("6LOH5paZ6L2J5YWl");
 
-					list.setOD_POSTERDATE(parse(rs.getString("update_time").substring(0, 10) + " 00:00:00"));
+					list.setOD_POSTERDATE(parse(rs.getString("setup_time").substring(0, 10) + " 00:00:00"));
 
 					list.setLinks(findFile(conn, String.valueOf(rs.getInt("ID"))));
 
@@ -578,6 +584,58 @@ public class TransferInterview extends Thread {
 					rs7.close();
 				if (stmts7 != null)
 					stmts7.close();
+				conn.close();
+			} catch (SQLException se) {
+				System.out.println("error:" + se.toString());
+				errorMsg = "close ResultSet or Statment or connection error: " + se.toString();
+			}
+
+		}
+		return check;
+	}
+
+	// 更新Mssql資料表
+	public boolean update(ArrayList<Interview> lists) {
+
+		boolean check = false;
+		// MSSql
+		Connection conn = null;
+		try {
+			// 連結資料庫
+			conn = DriverManager.getConnection(connectionUrl);
+			Class.forName(driver);
+
+		} catch (Exception e) {
+			this.errorMsg = e.toString();
+			return check;
+		}
+
+		PreparedStatement stmts = null;
+		ResultSet rs = null;
+		try {
+			for (int i = 0; i < lists.size(); i++) {
+				Interview data = (Interview) lists.get(i);
+
+				String sSql = String.format(" UPDATE %s SET OD_PUBUNITDN = ? WHERE OD_SERNO = ? ", datatablename);
+				// System.out.println(sSql.toString());
+				stmts = conn.prepareStatement(sSql);
+				stmts.clearParameters();
+				stmts.setString(1, data.getOD_PUBUNITDN());// serno
+				stmts.setString(2, data.getOD_SERNO());// pubUnitDN
+				int updateInt = stmts.executeUpdate();
+				System.out.println("updateInt:" + updateInt);
+			}
+			check = true;
+			return check;
+		} catch (Exception e) {
+			System.out.println("error:" + e.toString());
+			errorMsg = "find from table error: " + e.toString();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+				if (stmts != null)
+					stmts.close();
 				conn.close();
 			} catch (SQLException se) {
 				System.out.println("error:" + se.toString());

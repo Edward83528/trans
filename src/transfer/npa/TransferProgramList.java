@@ -21,6 +21,7 @@ import transfer.component.DownloadImage;
 import transfer.component.Extraction;
 import transfer.component.Snowflake;
 import transfer.entity.ProgramList;
+import transfer.entity.Interview;
 import transfer.entity.Link;
 import transfer.entity.ProgramList;
 
@@ -76,7 +77,8 @@ public class TransferProgramList extends Thread {
 		}
 		// 讀出並寫入
 		// System.out.println("轉檔是否成功:" + transfer.transform_out(in));
-
+		// 更新
+		// System.out.println("更新是否成功:" + transfer.update(in));
 	}
 
 	public String getErrorMsg() {
@@ -182,11 +184,15 @@ public class TransferProgramList extends Thread {
 					String serno = "7A2M" + String.valueOf(rs.getInt("ID"));
 					list.setOD_SERNO(serno.replaceAll(" ", "").trim());
 
-					list.setOD_PUBUNITDN("ou=A2M00,ou=organization,o=npa,c=tw");
 					list.setOD_SUBJECT(rs.getString("show_title")); // 節目名稱
 
 					String local_id = rs.getString("local_id");
 					String stationSerno = "5566";
+
+					String unitdn = "ou=A2M00,ou=organization,o=npa,c=tw";
+					unitdn = MappingDept.mappingNPAPubUnitDN2(local_id);
+					list.setOD_PUBUNITDN(unitdn);
+
 					String programLink = "#";
 					if ("9".equals(local_id)) {
 						// 台南
@@ -334,7 +340,7 @@ public class TransferProgramList extends Thread {
 
 					list.setOD_POSTNAME("6LOH5paZ6L2J5YWl");
 
-					list.setOD_POSTERDATE(parse(rs.getString("update_time").substring(0, 10) + " 00:00:00"));
+					list.setOD_POSTERDATE(parse(rs.getString("setup_time").substring(0, 10) + " 00:00:00"));
 
 					list.setLinks(findFile(rs.getString("host_name"), rs.getString("host_background")));
 
@@ -622,6 +628,58 @@ public class TransferProgramList extends Thread {
 					rs7.close();
 				if (stmts7 != null)
 					stmts7.close();
+				conn.close();
+			} catch (SQLException se) {
+				System.out.println("error:" + se.toString());
+				errorMsg = "close ResultSet or Statment or connection error: " + se.toString();
+			}
+
+		}
+		return check;
+	}
+
+	// 更新Mssql資料表
+	public boolean update(ArrayList<ProgramList> lists) {
+
+		boolean check = false;
+		// MSSql
+		Connection conn = null;
+		try {
+			// 連結資料庫
+			conn = DriverManager.getConnection(connectionUrl);
+			Class.forName(driver);
+
+		} catch (Exception e) {
+			this.errorMsg = e.toString();
+			return check;
+		}
+
+		PreparedStatement stmts = null;
+		ResultSet rs = null;
+		try {
+			for (int i = 0; i < lists.size(); i++) {
+				ProgramList data = (ProgramList) lists.get(i);
+
+				String sSql = String.format(" UPDATE %s SET OD_PUBUNITDN = ? WHERE OD_SERNO = ? ", datatablename);
+				// System.out.println(sSql.toString());
+				stmts = conn.prepareStatement(sSql);
+				stmts.clearParameters();
+				stmts.setString(1, data.getOD_PUBUNITDN());
+				stmts.setString(2, data.getOD_SERNO());
+				stmts.executeUpdate();
+
+			}
+			check = true;
+			return check;
+		} catch (Exception e) {
+			System.out.println("error:" + e.toString());
+			errorMsg = "find from table error: " + e.toString();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+				if (stmts != null)
+					stmts.close();
 				conn.close();
 			} catch (SQLException se) {
 				System.out.println("error:" + se.toString());

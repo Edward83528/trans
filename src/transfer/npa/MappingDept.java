@@ -73,4 +73,40 @@ public class MappingDept {
 		return PubUnitDN3;
 
 	}
+
+	// 發布單位Mapping(舊DB分臺對應我們的發布單位)
+	public static String mappingNPAPubUnitDN2(String dept) {
+		String PubUnitDN3 = "ou=A2M00,ou=organization,o=npa,c=tw";
+
+		if ("9".equals(dept)) {
+			// 9臺南分臺
+			PubUnitDN3 = "ou=A2MV1,ou=A2M00,ou=organization,o=npa,c=tw";
+		} else if ("1".equals(dept)) {
+			// 1全國治安交通網
+			PubUnitDN3 = "ou=A2M00,ou=organization,o=npa,c=tw";
+		} else if ("2".equals(dept)) {
+			// 2臺北分臺
+			PubUnitDN3 = "ou=A2MS1,ou=A2M00,ou=organization,o=npa,c=tw";
+		} else if ("3".equals(dept)) {
+			// 3臺中分臺
+			PubUnitDN3 = "ou=A2MU1,ou=A2M00,ou=organization,o=npa,c=tw";
+		} else if ("4".equals(dept)) {
+			// 4高雄分臺
+			PubUnitDN3 = "ou=A2MW1,ou=A2M00,ou=organization,o=npa,c=tw";
+		} else if ("5".equals(dept)) {
+			// 5宜蘭分臺
+			PubUnitDN3 = "ou=A2MY1,ou=A2M00,ou=organization,o=npa,c=tw";
+		} else if ("6".equals(dept)) {
+			// 6花蓮分臺
+			PubUnitDN3 = "ou=A2MX1,ou=A2M00,ou=organization,o=npa,c=tw";
+		} else if ("7".equals(dept)) {
+			// 7臺東分臺
+			PubUnitDN3 = "ou=A2MZ1,ou=A2M00,ou=organization,o=npa,c=tw";
+		} else if ("8".equals(dept)) {
+			// 8新竹分臺
+			PubUnitDN3 = "ou=A2MT1,ou=A2M00,ou=organization,o=npa,c=tw";
+		}
+		return PubUnitDN3;
+
+	}
 }

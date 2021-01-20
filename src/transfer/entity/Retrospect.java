@@ -19,6 +19,8 @@ public class Retrospect {
 
 	private String OD_SECSUBJECT; // 主持人
 
+	private String OD_VIDEOTITLE; // 影音標題
+
 	private String OD_DETAILCONTENT; // 影音內容
 
 	// 共通
@@ -395,6 +397,14 @@ public class Retrospect {
 
 	public void setLinks(ArrayList<Link> links) {
 		this.links = links;
+	}
+
+	public String getOD_VIDEOTITLE() {
+		return OD_VIDEOTITLE;
+	}
+
+	public void setOD_VIDEOTITLE(String oD_VIDEOTITLE) {
+		OD_VIDEOTITLE = oD_VIDEOTITLE;
 	}
 
 }

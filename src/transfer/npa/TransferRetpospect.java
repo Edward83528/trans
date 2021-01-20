@@ -21,6 +21,7 @@ import transfer.component.DownloadImage;
 import transfer.component.Extraction;
 import transfer.component.Snowflake;
 import transfer.entity.Retrospect;
+import transfer.entity.Interview;
 import transfer.entity.Link;
 import transfer.entity.ProgramList;
 
@@ -75,7 +76,8 @@ public class TransferRetpospect extends Thread {
 		}
 		// 讀出並寫入
 		// System.out.println("轉檔是否成功:" + transfer.transform_out(in));
-
+		// 更新
+		System.out.println("更新是否成功:" + transfer.update(in));
 	}
 
 	public String getErrorMsg() {
@@ -182,14 +184,22 @@ public class TransferRetpospect extends Thread {
 
 					String serno = "8A2M" + String.valueOf(rs.getInt("ID"));
 					list.setOD_SERNO(serno.replaceAll(" ", "").trim());
-					list.setOD_PUBUNITDN("ou=A2M00,ou=organization,o=npa,c=tw");
-					list.setOD_SUBJECT(rs.getString("data_name"));
+
+					list.setOD_VIDEOTITLE(rs.getString("data_name")); // 影片標題
 					if (host != null) {
+						list.setOD_PUBUNITDN(host.getOD_PUBUNITDN() != null ? host.getOD_PUBUNITDN()
+								: "ou=A2M00,ou=organization,o=npa,c=tw");
+						list.setOD_SUBJECT(
+								host.getOD_SUBJECT() != null && !host.getOD_SUBJECT().isEmpty() ? host.getOD_SUBJECT()
+										: ""); // 節目名稱
 						list.setOD_STATIONSERNO(host.getOD_STATIONSERNO() != null ? host.getOD_STATIONSERNO() : ""); // 收聽地區代碼
 						list.setOD_SHOWTIME(host.getOD_STARTTIME() != null ? host.getOD_STARTTIME() : ""); // 播出時段
 						list.setOD_SECSUBJECT(host.getOD_HOSTNAME() != null ? host.getOD_HOSTNAME() : ""); // 主持人
 						list.setOD_READNUMBER(host.getOD_READNUMBER() != null ? host.getOD_READNUMBER() : 0L);
+						// 影片標題
 					} else {
+						list.setOD_PUBUNITDN("ou=A2M00,ou=organization,o=npa,c=tw");
+						list.setOD_SUBJECT(""); // 節目名稱
 						list.setOD_STATIONSERNO(""); // 收聽地區代碼
 						list.setOD_SHOWTIME(""); // 播出時段
 						list.setOD_SECSUBJECT(""); // 主持人
@@ -264,7 +274,7 @@ public class TransferRetpospect extends Thread {
 
 					list.setOD_POSTNAME("6LOH5paZ6L2J5YWl");
 
-					list.setOD_POSTERDATE(parse(rs.getString("update_time").substring(0, 10) + " 00:00:00"));
+					list.setOD_POSTERDATE(parse(rs.getString("setup_time").substring(0, 10) + " 00:00:00"));
 
 					list.setLinks(
 							findFile(rs.getString("data_name"), rs.getString("data_file"), rs.getString("data_img")));
@@ -304,6 +314,10 @@ public class TransferRetpospect extends Thread {
 
 					String local_id = rs.getString("local_id");
 					String stationSerno = "5566";
+
+					String unitdn = "ou=A2M00,ou=organization,o=npa,c=tw";
+					unitdn = MappingDept.mappingNPAPubUnitDN2(local_id);
+
 					if ("9".equals(local_id)) {
 						stationSerno = "7493b402-f78d-4303-947e-18fd43b9a30c";
 					} else if ("1".equals(local_id)) {
@@ -324,9 +338,12 @@ public class TransferRetpospect extends Thread {
 						stationSerno = "fd1d014e-3af6-4bc2-b4ef-83fb5ecb1360";
 					}
 					programList.setOD_STATIONSERNO(stationSerno);
+					programList.setOD_SUBJECT(rs.getString("show_title"));
 					programList.setOD_STARTTIME(rs.getString("begin_time"));
 					programList.setOD_HOSTNAME(rs.getString("host_name"));
 					programList.setOD_READNUMBER(rs.getLong("count"));
+					programList.setOD_PUBUNITDN(unitdn);
+
 				}
 
 				// System.out.println("查詢成功！共:" + (lists != null && lists.size() > 0 ?
@@ -407,13 +424,13 @@ public class TransferRetpospect extends Thread {
 				Retrospect data = (Retrospect) lists.get(i);
 
 				String sSql = String.format("INSERT INTO %s (OD_SERNO, OD_PUBUNITDN, OD_SUBJECT, "
-						+ "OD_STATIONSERNO, OD_SHOWDATE, OD_SHOWTIME, OD_SECSUBJECT, OD_DETAILCONTENT, "
+						+ "OD_STATIONSERNO, OD_SHOWDATE, OD_SHOWTIME, OD_SECSUBJECT, OD_DETAILCONTENT,OD_VIDEOTITLE, "
 						+ "OD_POSTERDATE, OD_CLOSEDATE, OD_STARTUSING, OD_LIAISONPER, OD_LIAISONTEL, OD_LIAISONFAX, "
 						+ "OD_LIAISONEMAIL, OD_ISEXAMINE, OD_EXAMINEDATE, OD_EXAMINENAME, OD_READNUMBER, OD_SUBJECTID, "
 						+ "OD_SUBJECTCLASS, OD_ADMINISTATIONID, OD_ADMINISTATIONCLASS, OD_SERVICEID, OD_SERVICECLASS, "
 						+ "OD_CREATEUID, OD_CREATENAME, OD_CREATEDATE, OD_POSTUID, OD_POSTNAME, OD_UPDATEDATE, "
 						+ "OD_DSID, OD_LANGUAGETYPE, OD_METAKEYWORD, OD_VIEWUID, OD_VIEWNAME, OD_VIEWDATE) "
-						+ "VALUES (?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, "
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?,?, "
 						+ "?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?)", datatablename);
 				// System.out.println(sSql.toString());
 				stmts = conn.prepareStatement(sSql);
@@ -427,36 +444,36 @@ public class TransferRetpospect extends Thread {
 				stmts.setString(6, data.getOD_SHOWTIME());
 				stmts.setString(7, data.getOD_SECSUBJECT());
 				stmts.setString(8, data.getOD_DETAILCONTENT());// detailContent
-
-				stmts.setString(9, decompose(data.getOD_POSTERDATE()));// posterDate
-				stmts.setString(10, data.getOD_CLOSEDATE() != null ? decompose(data.getOD_CLOSEDATE()) : null);// closeDate\
-				stmts.setString(11, data.getOD_STARTUSING() ? "1" : "0");// startUsing
-				stmts.setString(12, data.getOD_LIAISONPER());// liaisonPer
-				stmts.setString(13, data.getOD_LIAISONTEL());// liaisonTel
-				stmts.setString(14, data.getOD_LIAISONFAX());// liaisonFax
-				stmts.setString(15, data.getOD_LIAISONEMAIL());// liaisonEmail
-				stmts.setString(16, "1");// isExamine
-				stmts.setString(17, null);// examineDate
-				stmts.setString(18, data.getOD_EXAMINENAME());// examineName
-				stmts.setInt(19, data.getOD_READNUMBER() != null ? data.getOD_READNUMBER().intValue() : 99);// readNumber
-				stmts.setString(20, data.getOD_SUBJECTID());// subjectID
-				stmts.setString(21, data.getOD_SUBJECTCLASS());// subjectClass
-				stmts.setString(22, data.getOD_ADMINISTATIONID());// administationID
-				stmts.setString(23, data.getOD_ADMINISTATIONCLASS());// administationClass
-				stmts.setString(24, data.getOD_SERVICEID());// serviceID
-				stmts.setString(25, data.getOD_SERVICECLASS());// serviceClass
-				stmts.setString(26, data.getOD_CREATEUID());// createUid
-				stmts.setString(27, data.getOD_CREATENAME());// createName
-				stmts.setString(28, decompose(data.getOD_CREATEDATE()));// SYSDATETIME
-				stmts.setString(29, data.getOD_POSTUID());// postUid
-				stmts.setString(30, data.getOD_POSTNAME());// postName
-				stmts.setString(31, decompose(data.getOD_CREATEDATE()));// SYSDATETIME
-				stmts.setString(32, data.getOD_DSID());// DSID
-				stmts.setString(33, data.getOD_LANGUAGETYPE());// languageType
-				stmts.setString(34, data.getOD_METAKEYWORD());// metaKeyword
-				stmts.setString(35, data.getOD_VIEWUID());// viewUID
-				stmts.setString(36, data.getOD_VIEWNAME());// viewName
-				stmts.setString(37, null);// viewDate
+				stmts.setString(9, data.getOD_VIDEOTITLE());// 影片標題
+				stmts.setString(10, decompose(data.getOD_POSTERDATE()));// posterDate
+				stmts.setString(11, data.getOD_CLOSEDATE() != null ? decompose(data.getOD_CLOSEDATE()) : null);// closeDate\
+				stmts.setString(12, data.getOD_STARTUSING() ? "1" : "0");// startUsing
+				stmts.setString(13, data.getOD_LIAISONPER());// liaisonPer
+				stmts.setString(14, data.getOD_LIAISONTEL());// liaisonTel
+				stmts.setString(15, data.getOD_LIAISONFAX());// liaisonFax
+				stmts.setString(16, data.getOD_LIAISONEMAIL());// liaisonEmail
+				stmts.setString(17, "1");// isExamine
+				stmts.setString(18, null);// examineDate
+				stmts.setString(19, data.getOD_EXAMINENAME());// examineName
+				stmts.setInt(20, data.getOD_READNUMBER() != null ? data.getOD_READNUMBER().intValue() : 99);// readNumber
+				stmts.setString(21, data.getOD_SUBJECTID());// subjectID
+				stmts.setString(22, data.getOD_SUBJECTCLASS());// subjectClass
+				stmts.setString(23, data.getOD_ADMINISTATIONID());// administationID
+				stmts.setString(24, data.getOD_ADMINISTATIONCLASS());// administationClass
+				stmts.setString(25, data.getOD_SERVICEID());// serviceID
+				stmts.setString(26, data.getOD_SERVICECLASS());// serviceClass
+				stmts.setString(27, data.getOD_CREATEUID());// createUid
+				stmts.setString(28, data.getOD_CREATENAME());// createName
+				stmts.setString(29, decompose(data.getOD_CREATEDATE()));// SYSDATETIME
+				stmts.setString(30, data.getOD_POSTUID());// postUid
+				stmts.setString(31, data.getOD_POSTNAME());// postName
+				stmts.setString(32, decompose(data.getOD_CREATEDATE()));// SYSDATETIME
+				stmts.setString(33, data.getOD_DSID());// DSID
+				stmts.setString(34, data.getOD_LANGUAGETYPE());// languageType
+				stmts.setString(35, data.getOD_METAKEYWORD());// metaKeyword
+				stmts.setString(36, data.getOD_VIEWUID());// viewUID
+				stmts.setString(37, data.getOD_VIEWNAME());// viewName
+				stmts.setString(38, null);// viewDate
 				stmts.executeUpdate();
 
 				// 多網發布站台
@@ -617,6 +634,58 @@ public class TransferRetpospect extends Thread {
 					rs7.close();
 				if (stmts7 != null)
 					stmts7.close();
+				conn.close();
+			} catch (SQLException se) {
+				System.out.println("error:" + se.toString());
+				errorMsg = "close ResultSet or Statment or connection error: " + se.toString();
+			}
+
+		}
+		return check;
+	}
+
+	// 更新Mssql資料表
+	public boolean update(ArrayList<Retrospect> lists) {
+
+		boolean check = false;
+		// MSSql
+		Connection conn = null;
+		try {
+			// 連結資料庫
+			conn = DriverManager.getConnection(connectionUrl);
+			Class.forName(driver);
+
+		} catch (Exception e) {
+			this.errorMsg = e.toString();
+			return check;
+		}
+
+		PreparedStatement stmts = null;
+		ResultSet rs = null;
+		try {
+			for (int i = 0; i < lists.size(); i++) {
+				Retrospect data = (Retrospect) lists.get(i);
+
+				String sSql = String.format(" UPDATE %s SET OD_PUBUNITDN = ? WHERE OD_SERNO = ? ", datatablename);
+				// System.out.println(sSql.toString());
+				stmts = conn.prepareStatement(sSql);
+				stmts.clearParameters();
+				stmts.setString(1, data.getOD_PUBUNITDN());
+				stmts.setString(2, data.getOD_SERNO());
+				stmts.executeUpdate();
+
+			}
+			check = true;
+			return check;
+		} catch (Exception e) {
+			System.out.println("error:" + e.toString());
+			errorMsg = "find from table error: " + e.toString();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+				if (stmts != null)
+					stmts.close();
 				conn.close();
 			} catch (SQLException se) {
 				System.out.println("error:" + se.toString());

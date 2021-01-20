@@ -21,6 +21,7 @@ import transfer.component.DownloadImage;
 import transfer.component.Extraction;
 import transfer.component.Snowflake;
 import transfer.entity.Message;
+import transfer.entity.Interview;
 import transfer.entity.Link;
 
 // 6.警廣通訊wg174
@@ -74,6 +75,8 @@ public class TransferMessage174 extends Thread {
 		}
 		// 讀出並寫入
 		// System.out.println("轉檔是否成功:" + transfer.transform_out(in));
+		// 更新
+		// System.out.println("更新是否成功:" + transfer.update(in));
 		System.out.println("end");
 	}
 
@@ -179,7 +182,7 @@ public class TransferMessage174 extends Thread {
 
 					String serno = "6A2M" + String.valueOf(rs.getInt("ID"));
 					list.setOD_SERNO(serno.replaceAll(" ", "").trim());
-					list.setOD_PUBUNITDN("ou=A2M00,ou=organization,o=npa,c=tw");
+					list.setOD_PUBUNITDN(MappingDept.mappingNPAPubUnitDN(String.valueOf(rs.getInt("group_ID"))));
 					list.setOD_SUBJECT(rs.getString("title"));
 					list.setOD_DETAILCONTENT("<div class=\"ed_model01 clearfix\"><div class=\"ed_txt\">"
 							+ rs.getString("content") + "</div></div>");
@@ -242,7 +245,7 @@ public class TransferMessage174 extends Thread {
 
 					list.setOD_POSTNAME("6LOH5paZ6L2J5YWl");
 
-					list.setOD_POSTERDATE(parse(timestampToDate(rs.getLong("date_update"))));
+					list.setOD_POSTERDATE(parse(timestampToDate(rs.getLong("date_start"))));
 
 					list.setLinks(findFile(conn, String.valueOf(rs.getInt("ID")), rs.getString("pic"),
 							rs.getString("href"), rs.getString("title")));
@@ -561,6 +564,58 @@ public class TransferMessage174 extends Thread {
 					rs7.close();
 				if (stmts7 != null)
 					stmts7.close();
+				conn.close();
+			} catch (SQLException se) {
+				System.out.println("error:" + se.toString());
+				errorMsg = "close ResultSet or Statment or connection error: " + se.toString();
+			}
+
+		}
+		return check;
+	}
+
+	// 更新Mssql資料表
+	public boolean update(ArrayList<Message> lists) {
+
+		boolean check = false;
+		// MSSql
+		Connection conn = null;
+		try {
+			// 連結資料庫
+			conn = DriverManager.getConnection(connectionUrl);
+			Class.forName(driver);
+
+		} catch (Exception e) {
+			this.errorMsg = e.toString();
+			return check;
+		}
+
+		PreparedStatement stmts = null;
+		ResultSet rs = null;
+		try {
+			for (int i = 0; i < lists.size(); i++) {
+				Message data = (Message) lists.get(i);
+
+				String sSql = String.format(" UPDATE %s SET OD_PUBUNITDN = ? WHERE OD_SERNO = ? ", datatablename);
+				// System.out.println(sSql.toString());
+				stmts = conn.prepareStatement(sSql);
+				stmts.clearParameters();
+				stmts.setString(1, data.getOD_PUBUNITDN());
+				stmts.setString(2, data.getOD_SERNO());
+				stmts.executeUpdate();
+
+			}
+			check = true;
+			return check;
+		} catch (Exception e) {
+			System.out.println("error:" + e.toString());
+			errorMsg = "find from table error: " + e.toString();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+				if (stmts != null)
+					stmts.close();
 				conn.close();
 			} catch (SQLException se) {
 				System.out.println("error:" + se.toString());

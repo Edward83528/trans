@@ -242,7 +242,7 @@ public class TransferMessage187 extends Thread {
 
 					list.setOD_POSTNAME("6LOH5paZ6L2J5YWl");
 
-					list.setOD_POSTERDATE(parse(timestampToDate(rs.getLong("date_update"))));
+					list.setOD_POSTERDATE(parse(timestampToDate(rs.getLong("date_start"))));
 					list.setLinks(findFile(conn, String.valueOf(rs.getInt("ID")), rs.getString("href"),
 							rs.getString("title")));
 

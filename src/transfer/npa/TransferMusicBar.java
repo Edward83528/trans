@@ -75,7 +75,8 @@ public class TransferMusicBar extends Thread {
 		}
 		// 讀出並寫入
 		// System.out.println("轉檔是否成功:" + transfer.transform_out(in));
-
+		// 更新
+		// System.out.println("更新是否成功:" + transfer.update(in));
 	}
 
 	public String getErrorMsg() {
@@ -179,7 +180,7 @@ public class TransferMusicBar extends Thread {
 					MusicBar list = new MusicBar();
 					String serno = "1A2M" + String.valueOf(rs.getInt("ID"));
 					list.setOD_SERNO(serno.replaceAll(" ", "").trim());
-					list.setOD_PUBUNITDN("ou=A2M00,ou=organization,o=npa,c=tw");
+					list.setOD_PUBUNITDN(MappingDept.mappingNPAPubUnitDN2(String.valueOf(rs.getInt("group_ID"))));
 					list.setOD_SUBJECT(rs.getString("title"));
 					list.setOD_SECSUBJECT("警廣各分臺(臺北、新竹、臺中、 臺南、高雄、宜蘭、花蓮、臺東)");
 					list.setOD_BROADCASTTIME(parse(rs.getString("date") + " 00:00:00"));
@@ -266,7 +267,7 @@ public class TransferMusicBar extends Thread {
 
 					list.setOD_POSTNAME("6LOH5paZ6L2J5YWl");
 
-					list.setOD_POSTERDATE(parse(rs.getString("update_time").substring(0, 10) + " 00:00:00"));
+					list.setOD_POSTERDATE(parse(rs.getString("setup_time").substring(0, 10) + " 00:00:00"));
 
 					list.setLinks(findFile(conn, String.valueOf(rs.getInt("ID"))));
 
@@ -576,6 +577,58 @@ public class TransferMusicBar extends Thread {
 					rs7.close();
 				if (stmts7 != null)
 					stmts7.close();
+				conn.close();
+			} catch (SQLException se) {
+				System.out.println("error:" + se.toString());
+				errorMsg = "close ResultSet or Statment or connection error: " + se.toString();
+			}
+
+		}
+		return check;
+	}
+
+	// 更新Mssql資料表
+	public boolean update(ArrayList<MusicBar> lists) {
+
+		boolean check = false;
+		// MSSql
+		Connection conn = null;
+		try {
+			// 連結資料庫
+			conn = DriverManager.getConnection(connectionUrl);
+			Class.forName(driver);
+
+		} catch (Exception e) {
+			this.errorMsg = e.toString();
+			return check;
+		}
+
+		PreparedStatement stmts = null;
+		ResultSet rs = null;
+		try {
+			for (int i = 0; i < lists.size(); i++) {
+				MusicBar data = (MusicBar) lists.get(i);
+
+				String sSql = String.format(" UPDATE %s SET OD_PUBUNITDN = ? WHERE OD_SERNO = ? ", datatablename);
+				// System.out.println(sSql.toString());
+				stmts = conn.prepareStatement(sSql);
+				stmts.clearParameters();
+				stmts.setString(1, data.getOD_PUBUNITDN());
+				stmts.setString(2, data.getOD_SERNO());
+				stmts.executeUpdate();
+
+			}
+			check = true;
+			return check;
+		} catch (Exception e) {
+			System.out.println("error:" + e.toString());
+			errorMsg = "find from table error: " + e.toString();
+		} finally {
+			try {
+				if (rs != null)
+					rs.close();
+				if (stmts != null)
+					stmts.close();
 				conn.close();
 			} catch (SQLException se) {
 				System.out.println("error:" + se.toString());
