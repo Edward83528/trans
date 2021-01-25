@@ -73,7 +73,7 @@ public class TransferMessage183 extends Thread {
 			System.out.println("讀進資料共:" + in.size() + "筆");
 		}
 		// 讀出並寫入
-		// System.out.println("轉檔是否成功:" + transfer.transform_out(in));
+		System.out.println("轉檔是否成功:" + transfer.transform_out(in));
 
 	}
 
